@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+fixtures/corpus/
+fixtures/_tmp_clean/
+build/
+dist/
