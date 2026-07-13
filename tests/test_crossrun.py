@@ -1,7 +1,7 @@
 """Cross-run checks fire only with >=2 logs and catch comparability drift."""
 
-from inspect_audit.audit import audit_paths
 from conftest import fx, status_of
+from inspect_audit.audit import audit_paths
 
 
 def test_crossrun_not_checked_single_log():

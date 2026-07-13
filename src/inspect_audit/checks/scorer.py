@@ -7,8 +7,7 @@ to a default/NaN score (observed directly in Inspect's model_graded scorers).
 
 from __future__ import annotations
 
-from typing import Any
-
+from ..catalog import idtitle, registered
 from ..loader import Target
 from ..model import CheckResult, Finding, Status
 from ._util import GRADE_NOT_FOUND_PREFIX, is_bad_number
@@ -20,8 +19,9 @@ def _iter_scores(t: Target):
             yield idx, s, name, sco
 
 
+@registered("SCO001")
 def check_missing_scores(t: Target) -> CheckResult:
-    cid, title = "SCO001", "Missing sample scores"
+    cid, title = idtitle("SCO001")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available")
     results = getattr(t.log, "results", None)
@@ -49,8 +49,9 @@ def check_missing_scores(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("SCO002")
 def check_invalid_values(t: Target) -> CheckResult:
-    cid, title = "SCO002", "Invalid score values"
+    cid, title = idtitle("SCO002")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available")
     # Only unambiguous corruption is flagged. Arbitrary strings, numbers, lists
@@ -78,8 +79,9 @@ def check_invalid_values(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("SCO003")
 def check_empty_scorer_metrics(t: Target) -> CheckResult:
-    cid, title = "SCO003", "Scorer produced no usable metric"
+    cid, title = idtitle("SCO003")
     results = getattr(t.log, "results", None)
     if results is None or not results.scores:
         return CheckResult.not_checked(cid, title, "no scores recorded")
@@ -96,8 +98,9 @@ def check_empty_scorer_metrics(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("SCO004")
 def check_grade_parse_failure(t: Target) -> CheckResult:
-    cid, title = "SCO004", "Model-graded parse failure resolved to a default"
+    cid, title = idtitle("SCO004")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available")
     findings: list[Finding] = []

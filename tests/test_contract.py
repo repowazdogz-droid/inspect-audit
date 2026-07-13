@@ -3,9 +3,9 @@
 import hashlib
 import os
 
+from conftest import CORPUS, fx, status_of
 from inspect_audit.audit import audit_paths
 from inspect_audit.report import to_json, to_text
-from conftest import CORPUS, fx, status_of
 
 
 def _sha(path):

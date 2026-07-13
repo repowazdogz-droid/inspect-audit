@@ -8,8 +8,9 @@ model_roles for model_graded scorers, verified against Inspect 0.3.246).
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
+from ..catalog import idtitle, registered
 from ..loader import Target
 from ..model import CheckResult, Finding, Status
 from ._util import (
@@ -33,19 +34,20 @@ def _model_graded_scores(t: Target):
         return
     specs = _spec_by_name(t)
     for i, sc in enumerate(results.scores):
-        spec = specs.get(sc.name)
-        jm = judge_model_from_score(sc) or (judge_model_from_scorer_spec(spec) if spec else None)
+        sp = specs.get(sc.name)
+        jm = judge_model_from_score(sc) or (judge_model_from_scorer_spec(sp) if sp else None)
         graded = (
             jm is not None
-            or (spec is not None and spec_looks_model_graded(spec))
+            or (sp is not None and spec_looks_model_graded(sp))
             or score_name_looks_model_graded(sc)
         )
         if graded:
             yield i, sc, jm
 
 
+@registered("JUD001")
 def check_judge_model_recorded(t: Target) -> CheckResult:
-    cid, title = "JUD001", "Judge model recorded"
+    cid, title = idtitle("JUD001")
     results = getattr(t.log, "results", None)
     if not results or not results.scores:
         return CheckResult.not_checked(cid, title, "no scores recorded")
@@ -65,8 +67,9 @@ def check_judge_model_recorded(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("JUD002")
 def check_self_judging(t: Target) -> CheckResult:
-    cid, title = "JUD002", "Self-judging risk (generator == judge)"
+    cid, title = idtitle("JUD002")
     gen = getattr(t.log.eval, "model", None)
     mg = list(_model_graded_scores(t))
     if not mg:
@@ -88,8 +91,9 @@ def check_self_judging(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("JUD004")
 def check_judge_rationale_preserved(t: Target) -> CheckResult:
-    cid, title = "JUD004", "Judge rationale preserved"
+    cid, title = idtitle("JUD004")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available")
     mg_names = {sc.name for _, sc, _ in _model_graded_scores(t)}

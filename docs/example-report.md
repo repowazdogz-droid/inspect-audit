@@ -1,19 +1,28 @@
 # Example audit report
 
-Real `inspect-audit` output on fixture logs (regenerate with `python fixtures/build_fixtures.py`).
+Real `inspect-audit` output on the committed example logs. Reproduce with the commands shown.
 
-## A failing log: a model-graded scorer that graded nothing
+## A failing log — a scorer that looks scored but graded nothing
 
-The grader returned no parseable grade, so every sample got a `NaN` score, yet a metric row exists over an empty denominator.
+`examples/broken.eval` has a silently dropped errored sample and a model-graded scorer whose grader returned no parseable grade (so every grade is NaN over an empty denominator).
 
 ```
+$ inspect-audit examples/broken.eval
 inspect-audit 0.1.0
-target: fixtures/corpus/scorer_parse_failure.eval
+target: examples/broken.eval
+VERDICT: FAIL  (3 FAIL, 1 WARN, 15 PASS, 4 NOT_CHECKED)
+
+[WARN] DEN003 Scorer denominator shrink (unscored samples)
+    evidence : results.scores[0].unscored_samples
+    detail   : scorer=match scored=1 unscored=1 total=2
+    why      : scorer 'match' scored 1 of 2 sample(s); 1 were excluded from its metric denominator. The metric reads as clean while ignoring a subset.
+    fix      : Determine why samples went unscored (errors, abstentions, grader failures) and either fix scoring or report the true denominator.
+    aggregate_may_be_invalid: True
 
 [FAIL] DEN003 Scorer denominator shrink (unscored samples)
     evidence : results.scores[1].unscored_samples
-    detail   : scorer=model_graded_qa scored=0 unscored=3 total=3
-    why      : scorer 'model_graded_qa' scored 0 of 3 sample(s); 3 were excluded from its metric denominator. The metric reads as clean while ignoring a subset — in fact NO sample was scored.
+    detail   : scorer=model_graded_qa scored=0 unscored=2 total=2
+    why      : scorer 'model_graded_qa' scored 0 of 2 sample(s); 2 were excluded from its metric denominator. The metric reads as clean while ignoring a subset — in fact NO sample was scored.
     fix      : Determine why samples went unscored (errors, abstentions, grader failures) and either fix scoring or report the true denominator.
     aggregate_may_be_invalid: True
 
@@ -31,46 +40,41 @@ target: fixtures/corpus/scorer_parse_failure.eval
     fix      : Locate the scoring failure; a NaN/None value usually means the scorer errored or could not parse a result.
     aggregate_may_be_invalid: True
 
-[FAIL] SCO002 Invalid score values
-    evidence : samples[2].scores['model_graded_qa'].value
-    detail   : id=3 scorer=model_graded_qa value=nan reason=non-finite (NaN/inf)
-    why      : score 'model_graded_qa' on sample id=3 has a non-finite (NaN/inf) value (nan). Aggregating it can silently corrupt or skew the metric.
-    fix      : Locate the scoring failure; a NaN/None value usually means the scorer errored or could not parse a result.
-    aggregate_may_be_invalid: True
-
 [FAIL] SCO004 Model-graded parse failure resolved to a default
     evidence : samples[0].scores['model_graded_qa'].explanation
-    detail   : id=1 scorer=model_graded_qa value=nan explanation='Grade not found in model output: Default output'
+    detail   : id=1 scorer=model_graded_qa value=nan explanation='Grade not found in model output: (no grade line)'
     why      : the grader for 'model_graded_qa' on sample id=1 returned no parseable grade; the scorer fell back to a default/NaN value. The metric treats a grading failure as a data point.
     fix      : Fix the grader prompt/parse pattern or the judge model output; do not count grade-not-found as a score.
     aggregate_may_be_invalid: True
 
 [FAIL] SCO004 Model-graded parse failure resolved to a default
     evidence : samples[1].scores['model_graded_qa'].explanation
-    detail   : id=2 scorer=model_graded_qa value=nan explanation='Grade not found in model output: Default output'
+    detail   : id=2 scorer=model_graded_qa value=nan explanation='Grade not found in model output: (no grade line)'
     why      : the grader for 'model_graded_qa' on sample id=2 returned no parseable grade; the scorer fell back to a default/NaN value. The metric treats a grading failure as a data point.
     fix      : Fix the grader prompt/parse pattern or the judge model output; do not count grade-not-found as a score.
     aggregate_may_be_invalid: True
 
-[FAIL] SCO004 Model-graded parse failure resolved to a default
-    evidence : samples[2].scores['model_graded_qa'].explanation
-    detail   : id=3 scorer=model_graded_qa value=nan explanation='Grade not found in model output: Default output'
-    why      : the grader for 'model_graded_qa' on sample id=3 returned no parseable grade; the scorer fell back to a default/NaN value. The metric treats a grading failure as a data point.
-    fix      : Fix the grader prompt/parse pattern or the judge model output; do not count grade-not-found as a score.
+[WARN] DEN002 Completed vs total samples
+    evidence : results.completed_samples
+    detail   : completed=1 total=2
+    why      : 1 of 2 samples did not complete. Metrics computed over completed samples describe a subset of the intended evaluation.
+    fix      : Investigate incomplete samples (errors/limits); decide whether to retry, exclude explicitly, or report the reduced denominator.
     aggregate_may_be_invalid: True
 
 
-checks: 3 FAIL, 0 WARN, 16 PASS, 4 NOT_CHECKED
+checks: 3 FAIL, 1 WARN, 15 PASS, 4 NOT_CHECKED
 aggregate_may_be_invalid: True
 VERDICT: FAIL
 note: PASS means only that the implemented checks found no issue; it is not a guarantee that the evaluation is valid. NOT_CHECKED != PASS.
 ```
 
-## A clean log (verbose, showing NOT_CHECKED vs PASS)
+## A clean log (verbose — note NOT_CHECKED is distinct from PASS)
 
 ```
+$ inspect-audit examples/clean.eval --verbose
 inspect-audit 0.1.0
-target: fixtures/corpus/clean.eval
+target: examples/clean.eval
+VERDICT: PASS  (0 FAIL, 0 WARN, 16 PASS, 7 NOT_CHECKED)
 
 [PASS] DEN001 Scheduled vs recorded sample count
 [PASS] DEN002 Completed vs total samples
@@ -98,46 +102,5 @@ target: fixtures/corpus/clean.eval
 checks: 0 FAIL, 0 WARN, 16 PASS, 7 NOT_CHECKED
 aggregate_may_be_invalid: False
 VERDICT: PASS
-note: PASS means only that the implemented checks found no issue; it is not a guarantee that the evaluation is valid. NOT_CHECKED != PASS.
-```
-
-## Cross-run comparability (two logs)
-
-```
-inspect-audit 0.1.0
-target: 2 log(s)
-
-[WARN] REG002 Generation determinism pinned
-    evidence : eval.model_generate_config.seed
-    detail   : seed=None temperature=0.7
-    why      : no seed is set and temperature is not 0 (temperature=0.7); re-running will not reproduce these exact outputs, so the numbers are not replayable.
-    fix      : Set a seed and/or temperature=0 where the provider supports it; record that determinism is best-effort for closed APIs.
-    aggregate_may_be_invalid: False
-
-[WARN] XRN002 Comparable generation settings across runs
-    evidence : eval.model_generate_config.seed
-    detail   : seed values=['42', 'None']
-    why      : 'seed' differs across the runs (['42', 'None']); a metric difference may be an artefact of generation settings, not the model.
-    fix      : Pin 'seed' to the same value across all compared runs.
-    aggregate_may_be_invalid: False
-
-[WARN] XRN002 Comparable generation settings across runs
-    evidence : eval.model_generate_config.temperature
-    detail   : temperature values=['0.0', '0.7']
-    why      : 'temperature' differs across the runs (['0.0', '0.7']); a metric difference may be an artefact of generation settings, not the model.
-    fix      : Pin 'temperature' to the same value across all compared runs.
-    aggregate_may_be_invalid: False
-
-[WARN] XRN003 Generation fields set symmetrically across runs
-    evidence : eval.model_generate_config.seed
-    detail   : seed set_in=['clean.eval'] unset_in=['config_variant_b.eval']
-    why      : 'seed' is set in some runs (['clean.eval']) but left to the provider default in others (['config_variant_b.eval']); the unset runs may use a silently different regime.
-    fix      : Set 'seed' explicitly in every compared run, or confirm the defaults match.
-    aggregate_may_be_invalid: False
-
-
-checks: 0 FAIL, 3 WARN, 32 PASS, 8 NOT_CHECKED
-aggregate_may_be_invalid: False
-VERDICT: WARN
 note: PASS means only that the implemented checks found no issue; it is not a guarantee that the evaluation is valid. NOT_CHECKED != PASS.
 ```

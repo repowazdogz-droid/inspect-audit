@@ -16,16 +16,16 @@ import os
 import shutil
 import warnings
 
-warnings.filterwarnings("ignore")
-
-from inspect_ai import Task, eval as inspect_eval
+from inspect_ai import Task
+from inspect_ai import eval as inspect_eval
+from inspect_ai._util.error import EvalError
 from inspect_ai.dataset import Sample
+from inspect_ai.log import read_eval_log, write_eval_log
 from inspect_ai.model import GenerateConfig, ModelOutput, get_model
 from inspect_ai.scorer import match
 from inspect_ai.scorer._metric import Score
-from inspect_ai.log import read_eval_log, write_eval_log
-from inspect_ai.log._log import EvalScore
-from inspect_ai._util.error import EvalError
+
+warnings.filterwarnings("ignore")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CORPUS = os.path.join(HERE, "corpus")

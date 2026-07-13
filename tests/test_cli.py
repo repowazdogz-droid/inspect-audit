@@ -2,10 +2,8 @@
 
 import json
 
-import pytest
-
-from inspect_audit.cli import main
 from conftest import fx
+from inspect_audit.cli import main
 
 
 def test_exit_pass(capsys):

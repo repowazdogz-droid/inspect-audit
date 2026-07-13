@@ -7,17 +7,16 @@ metrics silently drop inconclusive/errored samples from the denominator).
 
 from __future__ import annotations
 
-from typing import Any
-
+from ..catalog import idtitle, registered
 from ..loader import Target
 from ..model import CheckResult, Finding, Status
-from ._util import scorer_specs
 
 NOANSWER = "N"
 
 
+@registered("DEN001")
 def check_dataset_vs_results(t: Target) -> CheckResult:
-    cid, title = "DEN001", "Scheduled vs recorded sample count"
+    cid, title = idtitle("DEN001")
     log = t.log
     results = getattr(log, "results", None)
     ds = getattr(log.eval, "dataset", None)
@@ -55,8 +54,9 @@ def check_dataset_vs_results(t: Target) -> CheckResult:
     )
 
 
+@registered("DEN002")
 def check_completed_vs_total(t: Target) -> CheckResult:
-    cid, title = "DEN002", "Completed vs total samples"
+    cid, title = idtitle("DEN002")
     results = getattr(t.log, "results", None)
     if results is None:
         return CheckResult.not_checked(cid, title, "results not recorded in log")
@@ -79,8 +79,9 @@ def check_completed_vs_total(t: Target) -> CheckResult:
     )
 
 
+@registered("DEN003")
 def check_scorer_denominator(t: Target) -> CheckResult:
-    cid, title = "DEN003", "Scorer denominator shrink (unscored samples)"
+    cid, title = idtitle("DEN003")
     results = getattr(t.log, "results", None)
     if results is None or not results.scores:
         return CheckResult.not_checked(cid, title, "no scores recorded in log")
@@ -109,8 +110,9 @@ def check_scorer_denominator(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("DEN004")
 def check_sample_limits(t: Target) -> CheckResult:
-    cid, title = "DEN004", "Samples truncated by a limit"
+    cid, title = idtitle("DEN004")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available (log_samples off or header-only)")
     findings: list[Finding] = []
@@ -132,8 +134,9 @@ def check_sample_limits(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("DEN005")
 def check_abstentions(t: Target) -> CheckResult:
-    cid, title = "DEN005", "Abstentions (NOANSWER) accounting"
+    cid, title = idtitle("DEN005")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available (log_samples off or header-only)")
     count = 0

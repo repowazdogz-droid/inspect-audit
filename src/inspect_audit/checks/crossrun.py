@@ -7,8 +7,7 @@ they report NOT_CHECKED.
 
 from __future__ import annotations
 
-from typing import Any
-
+from ..catalog import idtitle, registered
 from ..loader import Target
 from ..model import CheckResult, Finding, Status
 from ._util import gen_config_dict, judge_model_from_score
@@ -29,8 +28,9 @@ def _judge_models(t: Target) -> dict[str, str]:
     return out
 
 
+@registered("XRN001")
 def check_judge_divergence(targets: list[Target]) -> CheckResult:
-    cid, title = "XRN001", "Consistent judge model across runs"
+    cid, title = idtitle("XRN001")
     if len(targets) < 2:
         return CheckResult.not_checked(cid, title, "requires >= 2 logs")
     by_scorer: dict[str, set[str]] = {}
@@ -50,8 +50,9 @@ def check_judge_divergence(targets: list[Target]) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("XRN002")
 def check_config_divergence(targets: list[Target]) -> CheckResult:
-    cid, title = "XRN002", "Comparable generation settings across runs"
+    cid, title = idtitle("XRN002")
     if len(targets) < 2:
         return CheckResult.not_checked(cid, title, "requires >= 2 logs")
     cfgs = [gen_config_dict(t.log) for t in targets]
@@ -69,8 +70,9 @@ def check_config_divergence(targets: list[Target]) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("XRN003")
 def check_presence_asymmetry(targets: list[Target]) -> CheckResult:
-    cid, title = "XRN003", "Generation fields set symmetrically across runs"
+    cid, title = idtitle("XRN003")
     if len(targets) < 2:
         return CheckResult.not_checked(cid, title, "requires >= 2 logs")
     cfgs = [gen_config_dict(t.log) for t in targets]

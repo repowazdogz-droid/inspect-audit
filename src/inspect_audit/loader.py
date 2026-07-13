@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from inspect_ai.log import read_eval_log
 
@@ -41,7 +41,10 @@ def load_target(path: str, header_only: bool = False) -> Target:
     try:
         log = read_eval_log(path, header_only=header_only)
     except Exception as e:  # noqa: BLE001 - surface any decode/zip error as load failure
-        raise LogLoadError(f"could not read log ({type(e).__name__}): {e}") from e
+        # Keep the headline message clean; stash the raw cause for --json detail.
+        raise LogLoadError(
+            f"not a readable Inspect log (.eval/.json): {path}"
+        ) from e
 
     samples = getattr(log, "samples", None)
     samples_available = bool(samples) and not header_only

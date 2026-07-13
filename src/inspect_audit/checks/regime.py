@@ -7,13 +7,15 @@ reasoning_effort silently yields different reasoning regimes across providers).
 
 from __future__ import annotations
 
+from ..catalog import idtitle, registered
 from ..loader import Target
 from ..model import CheckResult, Finding, Status
 from ._util import gen_config_dict, looks_like_reasoning_model
 
 
+@registered("REG001")
 def check_reasoning_regime(t: Target) -> CheckResult:
-    cid, title = "REG001", "Reasoning regime pinned (heuristic)"
+    cid, title = idtitle("REG001")
     cfg = gen_config_dict(t.log)
     model = getattr(t.log.eval, "model", "") or ""
     if ("reasoning_effort" in cfg) or ("effort" in cfg) or ("reasoning_tokens" in cfg):
@@ -40,8 +42,9 @@ def check_reasoning_regime(t: Target) -> CheckResult:
     )
 
 
+@registered("REG002")
 def check_nondeterministic(t: Target) -> CheckResult:
-    cid, title = "REG002", "Generation determinism pinned"
+    cid, title = idtitle("REG002")
     cfg = gen_config_dict(t.log)
     if not cfg:
         return CheckResult.not_checked(cid, title, "no generation settings recorded (see REG003)")
@@ -67,8 +70,9 @@ def check_nondeterministic(t: Target) -> CheckResult:
     )
 
 
+@registered("REG003")
 def check_config_empty(t: Target) -> CheckResult:
-    cid, title = "REG003", "Generation settings explicitly recorded"
+    cid, title = idtitle("REG003")
     cfg = gen_config_dict(t.log)
     if cfg:
         return CheckResult.from_findings(cid, title, [])

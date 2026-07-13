@@ -7,3 +7,4 @@ fixtures/corpus/
 fixtures/_tmp_clean/
 build/
 dist/
+examples/_tmp/

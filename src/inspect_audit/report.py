@@ -26,6 +26,7 @@ def to_dict(report: AuditReport) -> dict:
                 "check_id": c.check_id,
                 "title": c.title,
                 "status": c.status.label,
+                "source": c.source,
                 "not_checked_reason": c.not_checked_reason,
                 "findings": [
                     {
@@ -50,23 +51,34 @@ def to_json(report: AuditReport) -> str:
 
 
 def to_text(report: AuditReport, verbose: bool = False) -> str:
+    counts = report.counts()
     lines: list[str] = []
     lines.append(f"inspect-audit {report.tool_version}")
     lines.append(f"target: {report.target}")
+    # verdict up top, so a busy reader sees it before the detail
+    lines.append(
+        f"VERDICT: {report.overall.label}  "
+        f"({counts['FAIL']} FAIL, {counts['WARN']} WARN, "
+        f"{counts['PASS']} PASS, {counts['NOT_CHECKED']} NOT_CHECKED)"
+    )
     lines.append("")
 
-    checks = sorted(report.checks, key=lambda c: (_ORDER[c.status.label], c.check_id))
+    checks = sorted(
+        report.checks,
+        key=lambda c: (_ORDER[c.status.label], c.check_id, c.source or ""),
+    )
     for c in checks:
+        tag = f" [{c.source}]" if c.source else ""
         if c.status == Status.NOT_CHECKED:
             if verbose:
-                lines.append(f"[NOT_CHECKED] {c.check_id} {c.title} — {c.not_checked_reason}")
+                lines.append(f"[NOT_CHECKED] {c.check_id}{tag} {c.title} — {c.not_checked_reason}")
             continue
         if not c.findings:
             if verbose:
-                lines.append(f"[PASS] {c.check_id} {c.title}")
+                lines.append(f"[PASS] {c.check_id}{tag} {c.title}")
             continue
         for f in c.findings:
-            lines.append(f"[{f.severity.label}] {f.check_id} {c.title}")
+            lines.append(f"[{f.severity.label}] {f.check_id}{tag} {c.title}")
             lines.append(f"    evidence : {f.evidence_path}")
             if f.detail:
                 lines.append(f"    detail   : {f.detail}")
@@ -75,7 +87,6 @@ def to_text(report: AuditReport, verbose: bool = False) -> str:
             lines.append(f"    aggregate_may_be_invalid: {f.aggregate_may_be_invalid}")
             lines.append("")
 
-    counts = report.counts()
     if not verbose:
         lines.append("")
     lines.append(

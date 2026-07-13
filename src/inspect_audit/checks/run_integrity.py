@@ -6,15 +6,14 @@ samples, and counts that agree?
 
 from __future__ import annotations
 
-from typing import Any
-
+from ..catalog import idtitle, registered
 from ..loader import Target
 from ..model import CheckResult, Finding, Status
-from ._util import judge_model_from_score
 
 
+@registered("RUN001")
 def check_status(t: Target) -> CheckResult:
-    cid, title = "RUN001", "Run reached a successful terminal state"
+    cid, title = idtitle("RUN001")
     status = getattr(t.log, "status", None)
     if status == "success":
         return CheckResult.from_findings(cid, title, [])
@@ -38,8 +37,9 @@ def check_status(t: Target) -> CheckResult:
     )
 
 
+@registered("RUN002")
 def check_results_completeness(t: Target) -> CheckResult:
-    cid, title = "RUN002", "Results and sample records present"
+    cid, title = idtitle("RUN002")
     log = t.log
     findings: list[Finding] = []
     results = getattr(log, "results", None)
@@ -66,8 +66,9 @@ def check_results_completeness(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("RUN003")
 def check_duplicate_ids(t: Target) -> CheckResult:
-    cid, title = "RUN003", "Unique (sample id, epoch)"
+    cid, title = idtitle("RUN003")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available")
     seen: dict[tuple, int] = {}
@@ -91,8 +92,9 @@ def check_duplicate_ids(t: Target) -> CheckResult:
     return CheckResult.from_findings(cid, title, findings)
 
 
+@registered("RUN004")
 def check_sample_count_mismatch(t: Target) -> CheckResult:
-    cid, title = "RUN004", "Recorded sample count matches results"
+    cid, title = idtitle("RUN004")
     if not t.samples_available:
         return CheckResult.not_checked(cid, title, "per-sample records not available")
     results = getattr(t.log, "results", None)
@@ -118,8 +120,9 @@ def check_sample_count_mismatch(t: Target) -> CheckResult:
     )
 
 
+@registered("RUN006")
 def check_invalidated(t: Target) -> CheckResult:
-    cid, title = "RUN006", "Run not marked invalidated"
+    cid, title = idtitle("RUN006")
     findings: list[Finding] = []
     if getattr(t.log, "invalidated", False):
         findings.append(Finding(

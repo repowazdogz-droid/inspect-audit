@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Optional
 
 
 class Status(IntEnum):
@@ -64,16 +63,17 @@ class CheckResult:
     title: str
     status: Status
     findings: list[Finding] = field(default_factory=list)
-    not_checked_reason: Optional[str] = None
+    not_checked_reason: str | None = None
+    source: str | None = None  # which log this result is about (multi-log mode)
 
     @classmethod
-    def not_checked(cls, check_id: str, title: str, reason: str) -> "CheckResult":
+    def not_checked(cls, check_id: str, title: str, reason: str) -> CheckResult:
         return cls(check_id, title, Status.NOT_CHECKED, [], reason)
 
     @classmethod
     def from_findings(
         cls, check_id: str, title: str, findings: list[Finding]
-    ) -> "CheckResult":
+    ) -> CheckResult:
         if not findings:
             return cls(check_id, title, Status.PASS, [])
         status = max(f.severity for f in findings)

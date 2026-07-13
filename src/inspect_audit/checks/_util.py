@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Optional
+from typing import Any
 
 # Inspect's model-graded scorers write this exact explanation prefix when the
 # grader response contains no parseable grade (see inspect_ai.scorer._model).
@@ -30,14 +30,14 @@ def scorer_specs(log: Any) -> list[Any]:
     return list(getattr(log.eval, "scorers", None) or [])
 
 
-def judge_model_from_score(score: Any) -> Optional[str]:
+def judge_model_from_score(score: Any) -> str | None:
     """Judge/grader model recorded in an EvalScore's params, if any."""
     params = getattr(score, "params", None) or {}
     m = params.get("model")
     return m if isinstance(m, str) and m else None
 
 
-def judge_model_from_scorer_spec(spec: Any) -> Optional[str]:
+def judge_model_from_scorer_spec(spec: Any) -> str | None:
     opts = getattr(spec, "options", None) or {}
     m = opts.get("model")
     return m if isinstance(m, str) and m else None
@@ -64,7 +64,7 @@ def score_name_looks_model_graded(score: Any) -> bool:
     return "model_graded" in text or "grader" in text
 
 
-def models_materially_identical(a: Optional[str], b: Optional[str]) -> bool:
+def models_materially_identical(a: str | None, b: str | None) -> bool:
     """Same provider/model string => same weights answering and grading."""
     if not a or not b:
         return False

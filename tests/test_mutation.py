@@ -5,8 +5,8 @@ cannot fail on the relevant defect is not a check.
 
 import pytest
 
-from inspect_audit.audit import audit_paths
 from conftest import fx, status_of
+from inspect_audit.audit import audit_paths
 
 # (fixture, check_id, expected status when the defect is present)
 MATRIX = [

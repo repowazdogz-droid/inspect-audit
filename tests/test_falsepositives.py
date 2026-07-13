@@ -2,14 +2,15 @@
 
 import warnings
 
-from inspect_audit.audit import audit_paths
 from conftest import status_of
+from inspect_audit.audit import audit_paths
 
 warnings.filterwarnings("ignore")
 
 
 def _limited_log(tmp_path):
-    from inspect_ai import Task, eval as inspect_eval
+    from inspect_ai import Task
+    from inspect_ai import eval as inspect_eval
     from inspect_ai.dataset import Sample
     from inspect_ai.model import GenerateConfig, ModelOutput, get_model
     from inspect_ai.scorer import match
@@ -35,7 +36,6 @@ def test_limited_run_does_not_false_positive_den001(tmp_path):
 
 def test_custom_string_score_not_flagged_sco002(tmp_path):
     # a categorical string score value is legitimate and must not be flagged
-    import copy
     from inspect_ai.log import read_eval_log, write_eval_log
     from inspect_ai.scorer._metric import Score
 
