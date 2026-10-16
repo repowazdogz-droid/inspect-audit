@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use inspect-audit in your work, please cite it as below."
+title: "inspect-audit"
+abstract: >-
+  inspect-audit reads an Inspect AI .eval log without modifying it and reports
+  FAIL when a grader's parse failure was scored as data.
+type: software
+authors:
+  - family-names: Smith
+    given-names: Warren
+repository-code: "https://github.com/repowazdogz-droid/inspect-audit"
+url: "https://github.com/repowazdogz-droid/inspect-audit"
+license: MIT
+version: "0.1.0"
+date-released: "2026-07-13"
+keywords:
+  - inspect-ai
+  - ai-evaluation
+  - evaluation
+  - audit

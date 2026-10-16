@@ -1,18 +1,60 @@
 # inspect-audit
 
-[![ci](https://github.com/repowazdogz-droid/inspect-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/repowazdogz-droid/inspect-audit/actions/workflows/ci.yml)
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue.svg)](pyproject.toml)
+`inspect-audit` reads an Inspect AI .eval log without modifying it and reports FAIL when a grader's parse failure was scored as data.
 
-A small, read-only auditor for [Inspect](https://github.com/UKGovernmentBEIS/inspect_ai)
-`.eval` logs. It looks for **silent validity failures** — the kind that let an
+[![CI](https://github.com/repowazdogz-droid/inspect-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/repowazdogz-droid/inspect-audit/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/repowazdogz-droid/inspect-audit)](https://github.com/repowazdogz-droid/inspect-audit/releases/latest)
+
+## Try it
+
+Two example logs ship in `examples/`. With [pipx](https://pipx.pypa.io):
+
+```console
+git clone https://github.com/repowazdogz-droid/inspect-audit
+cd inspect-audit
+pipx install .
+inspect-audit examples/broken.eval
+inspect-audit examples/clean.eval
+```
+
+In `broken.eval` the model-graded scorer graded none of its two samples: both
+grader outputs failed to parse and were recorded as NaN scores. The first command
+reports `VERDICT: FAIL` (SCO002, SCO004 and DEN003 fire) and exits `2`. The
+second reports `VERDICT: PASS` and exits `0`.
+
+## What this does not show
+
+`inspect-audit` reports where an evaluation log is wrong in the ways it knows how
+to look. It cannot tell you an evaluation is right. Full statement:
+[docs/assurance-boundary.md](docs/assurance-boundary.md).
+
+- **`PASS` means only that the implemented checks found no issue.** It is not a
+  certificate of validity. Many ways an evaluation can be wrong are not modelled
+  here: a biased or contaminated dataset, a mis-specified task, an unfair prompt,
+  a grade that is wrong but parseable.
+- **`NOT_CHECKED` is not `PASS`.** A check reports `NOT_CHECKED` when the data it
+  needs is absent (samples not logged, header-only read, or a cross-run check
+  given a single log). The report always shows these explicitly.
+- **It sees only what the log records.** It is static analysis over the `.eval`
+  file. It runs no model and uses no LLM judge, so it does not judge whether an
+  answer or a grade was correct.
+- **Some signals are heuristic or rest on a string contract.** REG001 guesses a
+  reasoning model from its name and is only ever `WARN`. SCO004 keys off the
+  explanation prefix Inspect writes on a grader parse failure (`"Grade not found
+  in model output"`); a future Inspect release could change it.
+- **Not every check has a mutation test.** The mutation matrix in
+  `tests/test_mutation.py` (a fixture carrying the defect, and the clean log)
+  covers 10 of the 24 checks.
+
+## What it does
+
+A read-only auditor for [Inspect](https://github.com/UKGovernmentBEIS/inspect_ai)
+`.eval` logs. It looks for silent validity failures, the kind that let an
 evaluation result read as clean while being wrong: samples quietly dropped from a
-metric's denominator, grader parse-failures scored as data, a model grading its
+metric's denominator, grader parse failures scored as data, a model grading its
 own output, duplicated samples, truncated logs, and runs whose generation
-settings make them non-reproducible or not comparable.
-
-It is static analysis. It does **not** run models, does **not** use an LLM judge,
-and **never modifies the log it reads**.
+settings make them non-reproducible or not comparable. It is static analysis and
+never modifies the log it reads.
 
 ## Install
 
@@ -22,14 +64,7 @@ Not yet published to PyPI. Install from GitHub:
 pip install git+https://github.com/repowazdogz-droid/inspect-audit
 ```
 
-## Quickstart
-
-The repository ships two tiny example logs. From a clone:
-
-```bash
-inspect-audit examples/broken.eval   # a run that looks scored but graded nothing -> FAIL
-inspect-audit examples/clean.eval    # a healthy run -> PASS
-```
+## Use
 
 ```bash
 inspect-audit run.eval another.eval   # cross-run comparability checks
@@ -99,33 +134,18 @@ log, **why it matters**, a **remediation**, and whether the finding means the
 prints at the top and the bottom. See
 [docs/example-report.md](docs/example-report.md) for a worked example.
 
-## Assurance boundary (read this)
-
-`inspect-audit` tells you where an evaluation log **is** wrong in the ways it
-knows how to look. It cannot tell you an evaluation is **right**.
-
-- **`PASS` means only that the implemented checks found no issue.** It is not a
-  certificate of validity. Many ways an evaluation can be wrong are not modelled
-  here (a biased dataset, a mis-specified task, a subtly wrong-but-parseable
-  grade, contamination, an unfair prompt).
-- **`NOT_CHECKED` is not `PASS`.** A check reports `NOT_CHECKED` when the data it
-  needs is absent (samples not logged, header-only read, or a cross-run check
-  given a single log). The report always shows these explicitly.
-- **The checks are static and conservative.** Where a signal is heuristic (REG001
-  guesses a reasoning model from its name) it is labelled and only ever `WARN`.
-
-Full statement: [docs/assurance-boundary.md](docs/assurance-boundary.md).
-
 ## Development
 
 ```bash
 pip install -e ".[dev]"
 python examples/build_examples.py   # regenerate example logs
 python fixtures/build_fixtures.py   # regenerate the test fixture corpus
-pytest                              # tests, incl. mutation tests per check
+pytest                              # tests
 ruff check .                        # lint
 mypy src                            # type-check
 ```
+
+The suite has 58 tests (`pytest --collect-only -q` collects 58).
 
 Maintainer: [@repowazdogz-droid](https://github.com/repowazdogz-droid). See
 [CONTRIBUTING.md](CONTRIBUTING.md). Licensed MIT.
