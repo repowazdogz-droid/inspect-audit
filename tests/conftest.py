@@ -22,7 +22,7 @@ def corpus():
     expected = {
         "clean.eval", "silent_dropped_errors.eval", "scorer_parse_failure.eval",
         "missing_judge_metadata.eval", "self_judging.eval",
-        "duplicate_sample_ids.eval", "regime_unpinned.eval",
+        "duplicate_sample_ids.json", "regime_unpinned.eval",
         "config_variant_b.eval", "truncated_log.eval",
     }
     have = set(os.listdir(CORPUS)) if os.path.isdir(CORPUS) else set()

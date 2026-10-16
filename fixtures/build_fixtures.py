@@ -146,7 +146,9 @@ def mutate_duplicate_ids(clean_path, out):
     log.results.completed_samples += 1
     sc = log.results.scores[0]
     sc.scored_samples = (sc.scored_samples or 0) + 1
-    _write(log, out)
+    # JSON, not .eval: the .eval writer stores samples keyed by (id, epoch), so a
+    # duplicate is overwritten on write and the fixture silently loses its defect.
+    write_eval_log(log, out, format="json")
 
 
 def mutate_regime_unpinned(clean_path, out):
@@ -180,7 +182,7 @@ def main():
     mutate_parse_failure(clean, os.path.join(CORPUS, "scorer_parse_failure.eval"))
     mutate_missing_judge_meta(clean, os.path.join(CORPUS, "missing_judge_metadata.eval"))
     mutate_self_judging(clean, os.path.join(CORPUS, "self_judging.eval"))
-    mutate_duplicate_ids(clean, os.path.join(CORPUS, "duplicate_sample_ids.eval"))
+    mutate_duplicate_ids(clean, os.path.join(CORPUS, "duplicate_sample_ids.json"))
     mutate_regime_unpinned(clean, os.path.join(CORPUS, "regime_unpinned.eval"))
     mutate_config_variant_b(clean, os.path.join(CORPUS, "config_variant_b.eval"))
     make_truncated(clean, os.path.join(CORPUS, "truncated_log.eval"))
