@@ -17,7 +17,7 @@ MATRIX = [
     ("scorer_parse_failure.eval", "DEN003", "FAIL"),
     ("missing_judge_metadata.eval", "JUD001", "WARN"),
     ("self_judging.eval", "JUD002", "WARN"),
-    ("duplicate_sample_ids.eval", "RUN003", "FAIL"),
+    ("duplicate_sample_ids.json", "RUN003", "FAIL"),
     ("regime_unpinned.eval", "REG001", "WARN"),
     ("regime_unpinned.eval", "REG003", "WARN"),
     ("truncated_log.eval", "RUN000", "FAIL"),
